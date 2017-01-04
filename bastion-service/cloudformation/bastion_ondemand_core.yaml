@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: creates required resources for bastion on-demand prototype
+Parameters:
+  pLambdaCodeBucket:
+    Type: String
+    Description: S3 bucket that contains code for Lambda functions
+    Default: "insert_bucket_name_that_contains_lambda_zips"
+Resources:
+  BastionLambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service: [
+                "ec2.amazonaws.com",
+                "lambda.amazonaws.com"
+              ]
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents"
+                ]
+                Resource: "arn:aws:logs:*:*:*"
+              -
+                Effect: "Allow"
+                Action: [
+                  "ec2:DescribeInstances",
+                  "ec2:DeleteTags",
+                  "ec2:DeleteVolume",
+                  "ec2:TerminateInstances"
+                ]
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action: "ssm:SendCommand"
+                Resource: [
+                  "arn:aws:ec2:*",
+                  "arn:aws:ssm:*:*:document/AWS-RunShellScript",
+                  "arn:aws:ssm:*:*:document/AWS-RunPowerShellScript"
+                ]
+              -
+                Effect: "Allow"
+                Action: [
+                  "ssm:CancelCommand",
+                  "ssm:ListCommands",
+                  "ssm:ListCommandInvocations"
+                ]
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action: [
+                  "cloudformation:DeleteStack",
+                  "cloudformation:DescribeStackResource",
+                  "cloudformation:DescribeStackResources",
+                  "cloudformation:DescribeStacks",
+                  "cloudformation:ListStackResources",
+                  "cloudformation:ListStacks"
+                ]
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action: "lambda:InvokeFunction"
+                Resource: !Join ["", ["arn:aws:lambda:*:", !Ref "AWS::AccountId", ":function:Bastion*" ] ]
+  BastionCreateLocalAcct:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: BastionCreateLocalAcct
+      Handler: "BastionCreateLocalAcct.CreateBastLocalAcct_handler"
+      Role:
+        Fn::GetAtt:
+          - "BastionLambdaExecutionRole"
+          - "Arn"
+      Code:
+        S3Bucket: !Ref pLambdaCodeBucket
+        S3Key: "BastionCreateLocalAcct.py.zip"
+      Runtime: "python2.7"
+      Timeout: "10"
+  BastionRandomUserAndPwd:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: BastionRandomUserAndPwd
+      Handler: "BastionRandomUserAndPwd.RandomUserAndPwd_handler"
+      Role:
+        Fn::GetAtt:
+          - "BastionLambdaExecutionRole"
+          - "Arn"
+      Code:
+        S3Bucket: !Ref pLambdaCodeBucket
+        S3Key: "BastionRandomUserAndPwd.py.zip"
+      Runtime: "python2.7"
+      Timeout: "10"
+  BastionTermExpired:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: BastionTermExpired
+        Handler: "BastionTermExpired.expired_bastion_handler"
+        Role:
+          Fn::GetAtt:
+            - "BastionLambdaExecutionRole"
+            - "Arn"
+        Code:
+          S3Bucket: !Ref pLambdaCodeBucket
+          S3Key: "BastionTermExpired.py.zip"
+        Runtime: "python2.7"
+        Timeout: "20"
