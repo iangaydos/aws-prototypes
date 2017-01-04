@@ -18,12 +18,14 @@ CloudTrail, CloudWatch, IAM Role, Lambda, Systems Manager-Run Command, EC2, S3, 
 ## Use Case
 The use case for prototype is to provide a publicly accessible, on-demand bastion instance (either linux or windows), that will terminate
 after a specified expiration interval (e.g., 60 minutes) and perform all necessary cleanup as follows:
+
 1. provision platform-based bastion instance (see artifacts 2 and 3) in public subnet, with security group open for remote access (ssh, rdp)
 2. create local account on bastion instance using random generated username and random generated password
 3. create local account on target managed instance (i.e., private instance you need a remote connection to)
 4. scheduled cleanup with terminate bastion stacks that are expired and delete local account that was created on managed instance
-* - all actions will be fully logged in CloudTrail
-* - All managed instances must have the SSM agent installed, have Internet access, and be launched with an IAM Instance role with SSM access
+
+* All actions will be fully logged in CloudTrail
+* All managed instances must have the SSM agent installed, have Internet access, and be launched with an IAM Instance role with SSM access
 
 ## Artifacts
 ### CloudFormation
@@ -48,7 +50,8 @@ Function scheduled via CloudWatch rule to routinely check for and terminate expi
 3. Execute bastion_ondemand_core.yaml to create IAM role and Lambda functions
 4. Execute either create_linux_bastion.yaml or create_win_bastion.yaml to create an on-demand bastion stacks
 5. Manually create CloudWatch rule and associate to BastionTermExpired function as schedule trigger at desired interval
-* - Step 5 is critical for automated cleanup; however, you may want to adjust intervals and test adhoc
+
+* Step 5 is critical for automated cleanup; however, you may want to adjust intervals and test adhoc
 
 ## Other Prerequisites
 1. Workloads must be configured to use Systems Manager agent
