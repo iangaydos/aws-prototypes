@@ -67,7 +67,7 @@ def RandomUserAndPwd_handler(event, context):
 
         request_user = event['ResourceProperties']['Requestor']
 
-        username = 'csc_bastion_' + usertoken
+        username = 'bastion_svc_' + usertoken
         print 'Bastion access requested by: ' + request_user + ' assigned generated username: ' + username
         # set expiration time
         expire_time = str(datetime.now() + timedelta(minutes=expire_interval))

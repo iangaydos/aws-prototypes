@@ -80,7 +80,7 @@ def is_window_target(event, response):
         + "$HelpDesk.SetPassword(\"" + random_pwd + "\") \n" \
         + "$HelpDesk.SetInfo() \n" \
         + "$HelpDesk.Put(\"Description\"," \
-        + "\"CSC Support Local Account\") \n" \
+        + "\"Bastion-Service Local Account\") \n" \
         + "$HelpDesk.SetInfo() \n" \
         + "$Group = $ADSI.Children.Find($GroupName, \"group\") \n" \
         + "$Group.Add((\"WinNT://$computer/$user\")) \n"
